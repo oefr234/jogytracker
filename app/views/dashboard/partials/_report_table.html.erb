@@ -1,0 +1,22 @@
+<h4 class="fw-semibold mb-3">Weekly Report</h4>
+
+<form class="row g-2 mb-3">
+  <div class="col-auto">
+    <input id="repFrom" type="date" class="form-control form-control-sm" placeholder="From">
+  </div>
+  <div class="col-auto">
+    <input id="repTo" type="date" class="form-control form-control-sm" placeholder="To">
+  </div>
+  <div class="col-auto">
+    <button id="runReport" type="button" class="btn btn-sm btn-primary">Run</button>
+  </div>
+</form>
+
+<table id="reportTbl" class="table table-sm table-striped align-middle">
+  <thead class="table-light">
+  <tr>
+    <th>Year</th><th>Week</th><th>Total km</th><th>Avg km</th><th>Avg speed (km/h)</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+</table>

@@ -1,0 +1,21 @@
+<h2 class="mb-4 fw-semibold">Dashboard</h2>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <%= render 'dashboard/partials/time_entries_table' %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <%= render 'dashboard/partials/report_table' %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= render 'dashboard/partials/index_scripts' %>

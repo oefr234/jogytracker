@@ -1,0 +1,94 @@
+<script>
+    function toggleForms(showRegister) {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const title = document.getElementById('formTitle');
+
+        if (showRegister) {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            title.textContent = 'Register';
+        } else {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            title.textContent = 'Login';
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const flashMsg = sessionStorage.getItem('flash');
+        if (flashMsg) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning text-center mb-3';
+            alertDiv.textContent = flashMsg;
+
+            const container = document.querySelector('.card') || document.body;
+            container.parentNode.insertBefore(alertDiv, container);
+
+            setTimeout(() => {
+                alertDiv.classList.add('fade');
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 4000);
+
+            sessionStorage.removeItem('flash');
+        }
+
+        document.getElementById('showRegister').addEventListener('click', e => {
+            e.preventDefault();
+            toggleForms(true);
+        });
+
+        document.getElementById('showLogin').addEventListener('click', e => {
+            e.preventDefault();
+            toggleForms(false);
+        });
+
+        async function apiCall(url, method, body) {
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            return { ok: res.ok, data: await res.json() };
+        }
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('loginMsg');
+            const res = await apiCall('/api/login', 'POST', { email, password });
+
+            if (res.ok) {
+                localStorage.setItem('token', res.data.token);
+                localStorage.setItem('user', JSON.stringify(res.data.user));
+                msg.textContent = 'Logged in. Redirecting...';
+                window.location = '/';
+            } else {
+                msg.textContent = res.data.error || res.data.errors?.join(', ') || 'Login failed';
+            }
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPass').value;
+            const password_confirmation = document.getElementById('regPassConf').value;
+            const msg = document.getElementById('loginMsg');
+
+            const res = await apiCall('/api/register', 'POST', {
+                user: { name, email, password, password_confirmation }
+            });
+
+            if (res.ok) {
+                localStorage.setItem('token', res.data.token);
+                localStorage.setItem('user', JSON.stringify(res.data.user));
+                msg.textContent = 'Registered successfully! Redirecting...';
+                window.location = '/';
+            } else {
+                msg.textContent = res.data.errors?.join(', ') || 'Registration failed';
+            }
+        });
+    });
+
+</script>

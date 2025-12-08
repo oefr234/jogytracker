@@ -1,0 +1,139 @@
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location = "/login";
+
+    let editingId = null;
+
+    function authHeaders() {
+        return { 'Content-Type': 'application/json', 'Authorization': 'Token token=' + token };
+    }
+
+    async function loadEntries() {
+        const from = document.getElementById('filterFrom').value;
+        const to = document.getElementById('filterTo').value;
+        const qs = new URLSearchParams();
+        if (from) qs.append('from', from);
+        if (to) qs.append('to', to);
+
+        const res = await fetch('/api/time_entries?' + qs.toString(), { headers: authHeaders() });
+        const data = await res.json();
+
+        const tbody = document.querySelector('#entriesTbl tbody');
+        tbody.innerHTML = '';
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+        <td>${row.date}</td>
+        <td>${row.distance_km}</td>
+        <td>${row.duration_seconds}</td>
+        <td>${row.location || '-'}</td>
+        <td>${row.avg_speed_kmh}</td>
+        <td>
+          <button data-id="${row.id}" class="btn btn-sm btn-outline-primary editBtn">Edit</button>
+          <button data-id="${row.id}" class="btn btn-sm btn-outline-danger delBtn">Delete</button>
+        </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function saveEntry() {
+        const payload = {
+            time_entry: {
+                date: document.getElementById('date').value,
+                distance_km: parseFloat(document.getElementById('distance').value),
+                duration_seconds: parseInt(document.getElementById('duration').value, 10),
+                location: document.getElementById('location').value.trim()
+            }
+        };
+        const url = editingId ? `/api/time_entries/${editingId}` : '/api/time_entries';
+        const method = editingId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+        const msg = document.getElementById('msg');
+        if (res.ok) {
+            msg.textContent = '✅ Saved successfully.';
+            editingId = null;
+            resetForm();
+            loadEntries();
+        } else {
+            const err = await res.json();
+            msg.textContent = (err.errors || [err.error]).join(', ');
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('date').value = '';
+        document.getElementById('distance').value = '';
+        document.getElementById('duration').value = '';
+        document.getElementById('location').value = '';
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', saveEntry);
+    document.getElementById('cancelEdit').addEventListener('click', () => { editingId = null; resetForm(); });
+
+    document.getElementById('entriesTbl').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('editBtn')) {
+            const id = e.target.dataset.id;
+            const res = await fetch(`/api/time_entries/${id}`, { headers: authHeaders() });
+            if (res.ok) {
+                const row = await res.json();
+                editingId = id;
+                document.getElementById('date').value = row.date;
+                document.getElementById('distance').value = row.distance_km;
+                document.getElementById('duration').value = row.duration_seconds;
+                document.getElementById('location').value = row.location || '';
+            }
+        }
+        if (e.target.classList.contains('delBtn')) {
+            const id = e.target.dataset.id;
+            if (!confirm('Delete this entry?')) return;
+            const res = await fetch(`/api/time_entries/${id}`, { method: 'DELETE', headers: authHeaders() });
+            if (res.ok) loadEntries();
+        }
+    });
+
+    document.getElementById('applyFilter').addEventListener('click', loadEntries);
+
+    async function runReport() {
+        const from = document.getElementById('repFrom').value;
+        const to = document.getElementById('repTo').value;
+        const qs = new URLSearchParams();
+        if (from) qs.append('from', from);
+        if (to) qs.append('to', to);
+        const res = await fetch('/api/reports/weekly?' + qs.toString(), { headers: authHeaders() });
+        const data = await res.json();
+        const tbody = document.querySelector('#reportTbl tbody');
+        tbody.innerHTML = '';
+        data.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+        <td>${r.year}</td>
+        <td>${r.week}</td>
+        <td>${r.total_distance_km}</td>
+        <td>${r.avg_distance_km}</td>
+        <td>${r.avg_speed_kmh}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('runReport').addEventListener('click', runReport);
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await fetch('/api/logout', { method: 'DELETE', headers: authHeaders() });
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location = "/login";
+    });
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const manageBtn = document.getElementById('manageUsersBtn');
+    if (user.role === 'admin' || user.role === 'user_manager') {
+        manageBtn.style.display = 'inline-block';
+        manageBtn.addEventListener('click', () => {
+            window.location = '/admin';
+        });
+    }
+
+    loadEntries();
+    runReport();
+</script>
