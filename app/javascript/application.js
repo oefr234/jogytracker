@@ -1,6 +1,3 @@
-import "@popperjs/core"
-import "bootstrap"
-
 async function apiFetch(url, options = {}) {
     const token = localStorage.getItem("token");
 

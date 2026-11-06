@@ -69,6 +69,14 @@
             }
         });
 
+        const submitOnEnter = (formId, buttonId) => {
+            document.getElementById(formId).addEventListener('keydown', e => {
+                if (e.key === 'Enter' && e.target.tagName === 'INPUT') document.getElementById(buttonId).click();
+            });
+        };
+        submitOnEnter('loginForm', 'loginBtn');
+        submitOnEnter('registerForm', 'registerBtn');
+
         document.getElementById('registerBtn').addEventListener('click', async () => {
             const name = document.getElementById('regName').value.trim();
             const email = document.getElementById('regEmail').value.trim();

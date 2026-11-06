@@ -1,9 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  user: one
-  duration_seconds: 1
+regular_run:
+  user: regular
+  date: 2026-11-02
+  distance_km: 5
+  duration_seconds: 1800
 
-two:
-  user: two
-  duration_seconds: 1
+other_run:
+  user: other_regular
+  date: 2026-11-03
+  distance_km: 10
+  duration_seconds: 3600

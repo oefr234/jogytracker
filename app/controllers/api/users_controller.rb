@@ -1,23 +1,21 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate!
+  before_action :require_user_manager_or_admin!, only: %i[index create destroy]
   before_action :set_user, only: %i[show update destroy]
+  before_action :authorize_user_access!, only: %i[show update]
+  before_action :protect_admin_accounts!, only: %i[update destroy]
+  before_action :authorize_role_assignment!, only: %i[create update]
 
   def index
-    require_user_manager_or_admin!
     users = User.order(:id)
     render json: users, each_serializer: UserSerializer
   end
 
   def show
-    if current_user.admin? || current_user.user_manager? || current_user.id == @user.id
-      render json: @user
-    else
-      render json: { error: "Forbidden" }, status: :forbidden
-    end
+    render json: @user
   end
 
   def create
-    require_user_manager_or_admin!
     user = User.new(user_params)
     if user.save
       render json: user, status: :created
@@ -27,24 +25,14 @@ class Api::UsersController < ApplicationController
   end
 
   def update
-    if current_user.admin? || current_user.user_manager? || current_user.id == @user.id
-      if current_user.regular? && params.dig(:user, :role).present?
-        return render json: { error: "Forbidden" }, status: :forbidden
-      end
-
-      if @user.update(user_params_for_update)
-        render json: @user
-      else
-        render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
-      end
+    if @user.update(user_params_for_update)
+      render json: @user
     else
-      render json: { error: "Forbidden" }, status: :forbidden
+      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
   def destroy
-    require_user_manager_or_admin!
-
     if current_user.id == @user.id
       return render json: { error: "You cannot delete your own account." }, status: :forbidden
     end
@@ -58,6 +46,21 @@ class Api::UsersController < ApplicationController
 
   def set_user
     @user = User.find(params[:id])
+  end
+
+  def authorize_user_access!
+    permit_own!(@user.id)
+  end
+
+  def protect_admin_accounts!
+    raise Forbidden if @user.admin? && !current_user.admin?
+  end
+
+  def authorize_role_assignment!
+    role = params.dig(:user, :role)
+    return if role.blank? || current_user.admin?
+
+    raise Forbidden if current_user.regular? || role == "admin"
   end
 
   def base_user_params

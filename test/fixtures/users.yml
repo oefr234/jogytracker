@@ -1,15 +1,29 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  name: MyString
-  email: MyString
-  password_digest: MyString
-  role: MyString
-  api_token: MyString
+regular:
+  name: Regular User
+  email: regular@example.com
+  password_digest: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
+  role: regular
+  api_token: regular-token
 
-two:
-  name: MyString
-  email: MyString
-  password_digest: MyString
-  role: MyString
-  api_token: MyString
+other_regular:
+  name: Other Regular
+  email: other@example.com
+  password_digest: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
+  role: regular
+  api_token: other-token
+
+manager:
+  name: User Manager
+  email: manager@example.com
+  password_digest: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
+  role: user_manager
+  api_token: manager-token
+
+admin:
+  name: Admin
+  email: admin@example.com
+  password_digest: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
+  role: admin
+  api_token: admin-token

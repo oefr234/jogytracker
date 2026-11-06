@@ -11,9 +11,11 @@
     async function loadEntries() {
         const from = document.getElementById('filterFrom').value;
         const to = document.getElementById('filterTo').value;
+        const location = document.getElementById('filterLocation').value.trim();
         const qs = new URLSearchParams();
         if (from) qs.append('from', from);
         if (to) qs.append('to', to);
+        if (location) qs.append('location', location);
 
         const res = await fetch('/api/time_entries?' + qs.toString(), { headers: authHeaders() });
         const data = await res.json();
@@ -26,12 +28,14 @@
         <td>${row.date}</td>
         <td>${row.distance_km}</td>
         <td>${row.duration_seconds}</td>
-        <td>${row.location || '-'}</td>
+        <td class="entry-location"></td>
         <td>${row.avg_speed_kmh}</td>
         <td>
           <button data-id="${row.id}" class="btn btn-sm btn-outline-primary editBtn">Edit</button>
           <button data-id="${row.id}" class="btn btn-sm btn-outline-danger delBtn">Delete</button>
         </td>`;
+            // Location is user input, so it must not be rendered as HTML.
+            tr.querySelector('.entry-location').textContent = row.location || '-';
             tbody.appendChild(tr);
         });
     }
@@ -55,6 +59,7 @@
             editingId = null;
             resetForm();
             loadEntries();
+            runReport();
         } else {
             const err = await res.json();
             msg.textContent = (err.errors || [err.error]).join(', ');
@@ -88,7 +93,10 @@
             const id = e.target.dataset.id;
             if (!confirm('Delete this entry?')) return;
             const res = await fetch(`/api/time_entries/${id}`, { method: 'DELETE', headers: authHeaders() });
-            if (res.ok) loadEntries();
+            if (res.ok) {
+                loadEntries();
+                runReport();
+            }
         }
     });
 

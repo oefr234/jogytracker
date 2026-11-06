@@ -1,6 +1,9 @@
 class ApplicationController < ActionController::Base
+  class Forbidden < StandardError; end
+
   protect_from_forgery with: :null_session
   before_action :set_default_format
+  rescue_from Forbidden, with: :render_forbidden
 
   private
 
@@ -28,13 +31,18 @@ class ApplicationController < ActionController::Base
     render json: { error: "Forbidden" }, status: :forbidden
   end
 
+  # Raising stops the action, so these checks also work when called from inside one.
   def require_user_manager_or_admin!
     return if current_user&.admin? || current_user&.user_manager?
-    render json: { error: "Forbidden" }, status: :forbidden
+    raise Forbidden
   end
 
   def permit_own!(resource_user_id)
     return if current_user&.admin? || current_user&.user_manager? || current_user&.id == resource_user_id
+    raise Forbidden
+  end
+
+  def render_forbidden
     render json: { error: "Forbidden" }, status: :forbidden
   end
 end

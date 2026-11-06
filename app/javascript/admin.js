@@ -11,9 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const alertBox = document.getElementById("alertBox");
         alertBox.innerHTML = `
       <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
+        <span class="alert-text"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>`;
+        alertBox.querySelector(".alert-text").textContent = message;
     };
 
     const loadUsers = async () => {
@@ -29,20 +30,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
         <td>${u.id}</td>
-        <td>${u.name}</td>
-        <td>${u.email}</td>
+        <td class="user-name"></td>
+        <td class="user-email"></td>
         <td><span class="badge bg-${
                 u.role === "admin"
                     ? "danger"
                     : u.role === "user_manager"
                         ? "info"
                         : "secondary"
-            }">${u.role}</span></td>
+            } user-role"></span></td>
         <td class="text-end">
           <button data-id="${u.id}" class="btn btn-sm btn-outline-danger delBtn">
             <i class="bi bi-trash"></i> Delete
           </button>
         </td>`;
+            // User data goes through textContent so it can never run as HTML.
+            tr.querySelector(".user-name").textContent = u.name;
+            tr.querySelector(".user-email").textContent = u.email;
+            tr.querySelector(".user-role").textContent = u.role;
             tbody.appendChild(tr);
         });
     };

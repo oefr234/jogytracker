@@ -12,6 +12,7 @@ class Api::TimeEntriesController < ApplicationController
     entries = entries.where(user_id: params[:user_id]) if params[:user_id].present? && (current_user.admin? || current_user.user_manager?)
     entries = entries.where("date >= ?", params[:from]) if params[:from].present?
     entries = entries.where("date <= ?", params[:to]) if params[:to].present?
+    entries = entries.where("location LIKE ? ESCAPE '\\'", "%#{TimeEntry.sanitize_sql_like(params[:location])}%") if params[:location].present?
 
     render json: entries.order(date: :desc), each_serializer: TimeEntrySerializer
   end
